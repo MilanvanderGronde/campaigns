@@ -23,6 +23,7 @@ from src.diff import resolve_live_adgroups
 from src.generate import (generate_ad, generate_keywords, load_ad_templates,
                           load_keyword_templates, write_import_files)
 from src.providers import get_provider
+from src.report import render_report
 from src.scoring import score_universe
 from src.universe import UniverseError, active_stocks, load_universe
 from src.validate import load_approved_claims, validate_ads, validate_keywords
@@ -119,6 +120,9 @@ def main(argv: list[str] | None = None) -> int:
 
     # Milestone 2: generate ads + keywords for selected stocks, gated by the validator.
     build_failed = False
+    ads, keyword_rows = [], []
+    validation_errors: list[str] = []
+    validation_warnings: list[str] = []
     stock_by_ticker = {s.ticker: s for s in stocks}
     selected_stocks = [stock_by_ticker[r["ticker"]] for r in rows if r["selected"]]
     if selected_stocks:
@@ -128,7 +132,6 @@ def main(argv: list[str] | None = None) -> int:
         url_pattern = config.get("final_url_pattern")
         default_url = config.get("final_url", "")
 
-        ads, keyword_rows = [], []
         for stock in selected_stocks:
             final_url = url_pattern.format(slug=stock.slug) if url_pattern else default_url
             ads.append(generate_ad(stock, ad_templates, final_url))
@@ -136,21 +139,57 @@ def main(argv: list[str] | None = None) -> int:
 
         result = validate_ads(ads, approved)
         kw_result = validate_keywords(keyword_rows)
-        result.errors.extend(kw_result.errors)
-        result.warnings.extend(kw_result.warnings)
-        for w in result.warnings:
+        validation_errors = result.errors + kw_result.errors
+        validation_warnings = result.warnings + kw_result.warnings
+        for w in validation_warnings:
             log.warning("validate: %s", w)
-        if result.errors:
-            for e in result.errors:
+        if validation_errors:
+            for e in validation_errors:
                 log.error("validate: %s", e)
             log.error("BUILD FAILED: %d validation error(s) — import files NOT written.",
-                      len(result.errors))
+                      len(validation_errors))
             build_failed = True
         else:
             for written in write_import_files(run_dir, ads, keyword_rows, kw_templates):
                 log.info("Wrote %s", written)
     else:
         log.info("No stocks selected — skipping ad/keyword generation.")
+
+    # Milestone 3: insights.html (rendered even on build failure, so the
+    # operator can see what tripped the validator).
+    cand_by_ticker = {c.ticker: c for c in candidates}
+    cards = []
+    for ad, stock in zip(ads, selected_stocks):
+        cand = cand_by_ticker[stock.ticker]
+        prefix = f"[{ad.ad_group}]"
+        cards.append({
+            "ad_group": ad.ad_group, "ticker": stock.ticker,
+            "score": cand.score, "delta_pct": cand.delta_pct, "best_term": cand.best_term,
+            "final_url": ad.final_url, "path1": ad.path1, "path2": ad.path2,
+            "headlines": [{"slot": i, "text": h, "chars": len(h), "limit": 30,
+                           "position": "--" if (h and i >= 11) else ""}
+                          for i, h in enumerate(ad.headlines, 1)],
+            "descriptions": [{"slot": i, "text": t, "chars": len(t), "limit": 90, "position": p}
+                             for i, (t, p) in enumerate(ad.descriptions, 1)],
+            "keywords": sorted({k["Keyword"] for k in keyword_rows if k["Ad group"] == ad.ad_group}),
+            "warnings": [w for w in validation_warnings if w.startswith(prefix)],
+            "dropped": ad.dropped,
+        })
+    report_path = render_report(run_dir / "insights.html", {
+        "date": f"{datetime.now():%Y-%m-%d %H:%M}",
+        "provider_requested": provider_name,
+        "provider_used": provider.name,
+        "universe_size": len(stocks),
+        "n_live": sum(r["already_live"] for r in rows),
+        "n_selected": selected_count,
+        "threshold": threshold,
+        "candidates": rows,
+        "cards": cards,
+        "errors": validation_errors,
+        "unmatched": unmatched,
+        "no_signal": no_signal,
+    })
+    log.info("Wrote %s", report_path)
 
     run_log_lines = [
         f"run: {datetime.now():%Y-%m-%d %H:%M}",
