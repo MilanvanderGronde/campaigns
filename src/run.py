@@ -20,9 +20,12 @@ import pandas as pd
 import yaml
 
 from src.diff import resolve_live_adgroups
+from src.generate import (generate_ad, generate_keywords, load_ad_templates,
+                          load_keyword_templates, write_import_files)
 from src.providers import get_provider
 from src.scoring import score_universe
 from src.universe import UniverseError, active_stocks, load_universe
+from src.validate import load_approved_claims, validate_ads, validate_keywords
 
 log = logging.getLogger("run")
 
@@ -114,6 +117,41 @@ def main(argv: list[str] | None = None) -> int:
         log.info("Terms with no signal/failed: %d", len(no_signal))
     log.info("Wrote %s", candidates_path)
 
+    # Milestone 2: generate ads + keywords for selected stocks, gated by the validator.
+    build_failed = False
+    stock_by_ticker = {s.ticker: s for s in stocks}
+    selected_stocks = [stock_by_ticker[r["ticker"]] for r in rows if r["selected"]]
+    if selected_stocks:
+        ad_templates = load_ad_templates(paths.get("ads_template", "templates/ads_en.yaml"))
+        kw_templates = load_keyword_templates(paths.get("keywords_template", "templates/keywords_en.yaml"))
+        approved = load_approved_claims(paths.get("approved_claims", "templates/approved_claims.yaml"))
+        url_pattern = config.get("final_url_pattern")
+        default_url = config.get("final_url", "")
+
+        ads, keyword_rows = [], []
+        for stock in selected_stocks:
+            final_url = url_pattern.format(slug=stock.slug) if url_pattern else default_url
+            ads.append(generate_ad(stock, ad_templates, final_url))
+            keyword_rows.extend(generate_keywords(stock, kw_templates))
+
+        result = validate_ads(ads, approved)
+        kw_result = validate_keywords(keyword_rows)
+        result.errors.extend(kw_result.errors)
+        result.warnings.extend(kw_result.warnings)
+        for w in result.warnings:
+            log.warning("validate: %s", w)
+        if result.errors:
+            for e in result.errors:
+                log.error("validate: %s", e)
+            log.error("BUILD FAILED: %d validation error(s) — import files NOT written.",
+                      len(result.errors))
+            build_failed = True
+        else:
+            for written in write_import_files(run_dir, ads, keyword_rows, kw_templates):
+                log.info("Wrote %s", written)
+    else:
+        log.info("No stocks selected — skipping ad/keyword generation.")
+
     run_log_lines = [
         f"run: {datetime.now():%Y-%m-%d %H:%M}",
         f"provider requested: {provider_name} | provider used: {provider.name}",
@@ -133,6 +171,9 @@ def main(argv: list[str] | None = None) -> int:
     ]
     (run_dir / "run_log.txt").write_text("\n".join(run_log_lines) + "\n", encoding="utf-8")
 
+    if build_failed:
+        print(f"BUILD FAILED — see {run_dir}/run_log.txt")
+        return 1
     print(f"Done. Output in {run_dir}/")
     return 0
 

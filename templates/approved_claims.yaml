@@ -1,0 +1,19 @@
+# Exact-string whitelist of pre-approved brand assets (from RSA_Example.xlsx).
+# An asset matching one of these strings exactly is exempt from the
+# superlative lint (rule 3). Anything new that trips the lint goes to
+# compliance review, not into the output.
+# Confirmed by operator 2026-06-12: no additional claims beyond the example.
+
+approved:
+  - "DEGIRO: Everyone’s an investor"
+  - "Start investing with DEGIRO"
+  - "DEGIRO: Enjoy low fees"
+  - "DEGIRO: Financial power to you"
+  - "100+ international awards"
+  - "Very low trading fees"
+  - "Invest with low costs"
+  - "3M investors trust DEGIRO"
+  - "Award-winning platform"
+  - "Investing involves risk of loss. This is not investment advice."
+  - "Open your account free and access 45+ markets in 30 countries."
+  - "See why 3M investors use our award-winning platform."

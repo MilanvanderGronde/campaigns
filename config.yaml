@@ -28,5 +28,8 @@ paths:
   universe: data/stock_universe.csv
   live_adgroups: data/live_adgroups.txt
   manual_hot_list: data/manual_hot_list.txt
+  ads_template: templates/ads_en.yaml
+  keywords_template: templates/keywords_en.yaml
+  approved_claims: templates/approved_claims.yaml
   cache_dir: cache
   output_dir: output

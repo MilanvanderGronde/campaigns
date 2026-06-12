@@ -1,1 +1,46 @@
-# RSA templates derived from data/reference/RSA_Example.xlsx — Milestone 2.
+# RSA templates — derived from data/reference/RSA_Example.xlsx (the golden example).
+# NOTE: Headline 1 uses a curly apostrophe (’) exactly as in the reference file.
+# Placeholders: {name} (runs the shortening fallback chain), {ticker}, {slug}.
+
+headlines:
+  # Block A — brand headlines, slots 1-4. Fixed strings, pre-approved.
+  brand:
+    - "DEGIRO: Everyone’s an investor"
+    - "Start investing with DEGIRO"
+    - "DEGIRO: Enjoy low fees"
+    - "DEGIRO: Financial power to you"
+
+  # Block B — stock-specific headlines, slots 5-10. Each runs the shortening
+  # chain independently; if even the ticker doesn't fit, the template is
+  # dropped for that stock and logged (never truncated).
+  stock:
+    - "Invest in {name} with DEGIRO"
+    - "Buy {name} shares"
+    - "Buy {name} stock"
+    - "Invest in {name} stock"
+    - "DEGIRO: {name} Shares"
+    - "DEGIRO: {name} Stock"
+
+  # Block C — proof points, slots 11-15. Fixed strings, pre-approved, unpinned.
+  proof:
+    - "100+ international awards"
+    - "Very low trading fees"
+    - "Invest with low costs"
+    - "3M investors trust DEGIRO"
+    - "Award-winning platform"
+
+# Exactly 4 descriptions. The risk disclaimer MUST be Description 1 pinned to
+# position 1 — validate.py fails the build if the text or the pin is missing.
+descriptions:
+  - text: "Investing involves risk of loss. This is not investment advice."
+    position: 1
+  - text: "Start investing in {name} stock with low costs at DEGIRO."
+    position: "--"
+  - text: "Open your account free and access 45+ markets in 30 countries."
+    position: "--"
+  - text: "See why 3M investors use our award-winning platform."
+    position: "--"
+
+paths:
+  path1: "stocks"
+  path2: "{slug}"   # falls back to lowercased ticker if the slug exceeds 15 chars

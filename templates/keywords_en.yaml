@@ -1,1 +1,29 @@
-# Keyword pattern templates — Milestone 2.
+# Keyword pattern templates — rendered per selected stock.
+# Placeholders: {name_lower} (short_name lowercased), {ticker_lower}.
+# Each pattern is emitted once per match type below (duplicates removed).
+
+patterns:
+  - "{name_lower} stock"
+  - "buy {name_lower} stock"
+  - "{name_lower} shares"
+  - "buy {name_lower} shares"
+  - "{name_lower} share price"
+  - "invest in {name_lower}"
+  - "{ticker_lower} stock"
+  - "buy {ticker_lower}"
+
+match_types:
+  - Exact
+  - Phrase
+
+# Shared negative list (written to negatives.csv) — terms that attract
+# advice-seeking rather than trading intent. Operator-editable.
+negatives:
+  - free
+  - reddit
+  - forecast
+  - prediction
+  - price target
+  - should i buy
+
+negative_match_type: Phrase
