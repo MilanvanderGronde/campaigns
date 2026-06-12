@@ -1,0 +1,6 @@
+pandas
+pyyaml
+jinja2
+openpyxl
+# Optional — the pipeline must run without it installed (Milestone 4):
+# pytrends

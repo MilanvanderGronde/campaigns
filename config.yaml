@@ -1,0 +1,32 @@
+# DEGIRO stock-trend pipeline configuration.
+
+brand: DEGIRO
+
+# Trend provider: manual | pytrends | google_api
+# pytrends silently falls back to manual if it fails entirely.
+provider: manual
+
+# Trend timeframe passed to the provider.
+timeframe: "now 7-d"
+
+# A candidate is selected when it is not already live AND score >= threshold.
+# NOTE: spec does not define a default; 50 chosen as starting point — tune freely.
+threshold: 50
+
+# Cap the number of selected candidates per run (highest score first).
+top_n: 20
+
+# Score assigned to manual_hot_list.txt lines that carry no explicit ,score suffix.
+manual_default_score: 100
+
+# Final URL for all generated ads (Milestone 2). Open item: confirm EN equivalent.
+final_url: https://www.degiro.nl/lp/beleggen
+# Optional per-stock pattern for Phase 2 landing pages, e.g.
+# final_url_pattern: https://www.degiro.nl/stocks/{slug}
+
+paths:
+  universe: data/stock_universe.csv
+  live_adgroups: data/live_adgroups.txt
+  manual_hot_list: data/manual_hot_list.txt
+  cache_dir: cache
+  output_dir: output

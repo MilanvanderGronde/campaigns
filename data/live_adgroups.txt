@@ -1,0 +1,9 @@
+# Live stock ad groups — paste one per line, free-form (name or ticker).
+# Matching is forgiving: case-insensitive, "stock"/"shares"/"buy" stripped,
+# matched on ticker, short name, or fuzzy company name.
+NVIDIA
+Tesla stock
+buy ASML shares
+Apple
+alphabet inc
+Saab

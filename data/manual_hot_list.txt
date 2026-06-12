@@ -1,0 +1,11 @@
+# Manual hot list — one stock name or ticker per line, optional ",score" (0-100).
+# Lines without a score get manual_default_score from config.yaml (default 100).
+# Lines starting with # are ignored.
+NVDA
+Palantir,92
+GameStop,88
+Rheinmetall,85
+Novo Nordisk,75
+ASML
+Coinbase,60
+Supermicro,45

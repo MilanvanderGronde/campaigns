@@ -1,0 +1,49 @@
+ticker,company_name,short_name,exchange,search_terms,slug,active
+AAPL,Apple Inc.,Apple,NASDAQ,apple stock|aapl stock,apple,true
+MSFT,Microsoft Corporation,Microsoft,NASDAQ,microsoft stock|msft stock,microsoft,true
+NVDA,NVIDIA Corporation,NVIDIA,NASDAQ,nvidia stock|nvda stock,nvidia,true
+GOOGL,Alphabet Inc.,Alphabet,NASDAQ,alphabet stock|google stock|googl stock,alphabet,true
+AMZN,"Amazon.com, Inc.",Amazon,NASDAQ,amazon stock|amzn stock,amazon,true
+META,"Meta Platforms, Inc.",Meta,NASDAQ,meta stock|meta platforms stock,meta,true
+TSLA,"Tesla, Inc.",Tesla,NASDAQ,tesla stock|tsla stock,tesla,true
+BRK.B,Berkshire Hathaway Inc.,Berkshire Hathaway,NYSE,berkshire hathaway stock|brk.b stock,berkshire-hathaway,true
+JPM,JPMorgan Chase & Co.,JPMorgan,NYSE,jpmorgan stock|jpm stock,jpmorgan,true
+V,Visa Inc.,Visa,NYSE,visa stock|v stock,visa,true
+JNJ,Johnson & Johnson,Johnson & Johnson,NYSE,johnson and johnson stock|jnj stock,johnson-johnson,true
+WMT,Walmart Inc.,Walmart,NYSE,walmart stock|wmt stock,walmart,true
+XOM,Exxon Mobil Corporation,Exxon Mobil,NYSE,exxon stock|xom stock,exxon-mobil,true
+KO,The Coca-Cola Company,Coca-Cola,NYSE,coca cola stock|ko stock,coca-cola,true
+DIS,The Walt Disney Company,Disney,NYSE,disney stock|dis stock,disney,true
+NFLX,"Netflix, Inc.",Netflix,NASDAQ,netflix stock|nflx stock,netflix,true
+PFE,Pfizer Inc.,Pfizer,NYSE,pfizer stock|pfe stock,pfizer,true
+INTC,Intel Corporation,Intel,NASDAQ,intel stock|intc stock,intel,true
+AMD,"Advanced Micro Devices, Inc.",AMD,NASDAQ,amd stock|amd shares,amd,true
+AVGO,Broadcom Inc.,Broadcom,NASDAQ,broadcom stock|avgo stock,broadcom,true
+TSM,Taiwan Semiconductor Manufacturing Company,TSMC,NYSE,tsmc stock|tsm stock|taiwan semiconductor stock,tsmc,true
+PLTR,Palantir Technologies Inc.,Palantir,NASDAQ,palantir stock|pltr stock,palantir,true
+COIN,"Coinbase Global, Inc.",Coinbase,NASDAQ,coinbase stock|coin stock,coinbase,true
+MSTR,MicroStrategy Incorporated,MicroStrategy,NASDAQ,microstrategy stock|mstr stock,microstrategy,true
+HOOD,"Robinhood Markets, Inc.",Robinhood,NASDAQ,robinhood stock|hood stock,robinhood,true
+GME,GameStop Corp.,GameStop,NYSE,gamestop stock|gme stock,gamestop,true
+AMC,"AMC Entertainment Holdings, Inc.",AMC,NYSE,amc stock|amc shares,amc,true
+SOFI,"SoFi Technologies, Inc.",SoFi,NASDAQ,sofi stock|sofi shares,sofi,true
+RIVN,"Rivian Automotive, Inc.",Rivian,NASDAQ,rivian stock|rivn stock,rivian,true
+LCID,"Lucid Group, Inc.",Lucid,NASDAQ,lucid stock|lcid stock,lucid,true
+SMCI,"Super Micro Computer, Inc.",Supermicro,NASDAQ,super micro stock|smci stock,supermicro,true
+RKLB,Rocket Lab USA Inc.,Rocket Lab,NASDAQ,rocket lab stock|rklb stock,rocket-lab,true
+NIO,NIO Inc.,NIO,NYSE,nio stock|nio shares,nio,true
+ASML,ASML Holding N.V.,ASML,EURONEXT,asml stock|asml shares,asml,true
+ADYEN,Adyen N.V.,Adyen,EURONEXT,adyen stock|adyen shares,adyen,true
+SAP,SAP SE,SAP,XETRA,sap stock|sap shares,sap,true
+MC,LVMH Moët Hennessy Louis Vuitton,LVMH,EURONEXT,lvmh stock|lvmh shares,lvmh,true
+NESN,Nestlé S.A.,Nestlé,SIX,nestle stock|nesn stock,nestle,true
+NOVO-B,Novo Nordisk A/S,Novo Nordisk,OMX,novo nordisk stock|novo-b stock,novo-nordisk,true
+SHEL,Shell plc,Shell,LSE,shell stock|shel stock,shell,true
+AIR,Airbus SE,Airbus,EURONEXT,airbus stock|air stock,airbus,true
+SIE,Siemens AG,Siemens,XETRA,siemens stock|sie stock,siemens,true
+VOW3,Volkswagen AG,Volkswagen,XETRA,volkswagen stock|vow3 stock,volkswagen,true
+RHM,Rheinmetall AG,Rheinmetall,XETRA,rheinmetall stock|rhm stock,rheinmetall,true
+RACE,Ferrari N.V.,Ferrari,EURONEXT,ferrari stock|race stock,ferrari,true
+ULVR,Unilever PLC,Unilever,LSE,unilever stock|ulvr stock,unilever,true
+TTE,TotalEnergies SE,TotalEnergies,EURONEXT,totalenergies stock|tte stock,totalenergies,true
+INGA,ING Groep N.V.,ING,EURONEXT,ing stock|ing shares,ing,true

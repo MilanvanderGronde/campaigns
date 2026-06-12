@@ -1,0 +1,141 @@
+"""CLI entry point — orchestrates the pipeline.
+
+Milestone 1 scope: universe -> provider scores -> diff against live ad groups
+-> output/run_*/candidates.csv + run_log.txt. Ad/keyword generation, validation
+and the HTML report attach here in Milestones 2-3.
+
+Usage: python -m src.run [--provider NAME] [--threshold N] [--top N] [--config PATH]
+"""
+
+from __future__ import annotations
+
+import argparse
+import logging
+import logging.handlers
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+import yaml
+
+from src.diff import resolve_live_adgroups
+from src.providers import get_provider
+from src.scoring import score_universe
+from src.universe import UniverseError, active_stocks, load_universe
+
+log = logging.getLogger("run")
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="DEGIRO stock trend -> ad group pipeline")
+    p.add_argument("--config", default="config.yaml", help="path to config.yaml")
+    p.add_argument("--provider", choices=("manual", "pytrends", "google_api"),
+                   help="override config provider")
+    p.add_argument("--threshold", type=float, help="override selection threshold")
+    p.add_argument("--top", type=int, help="override max selected candidates")
+    return p.parse_args(argv)
+
+
+def setup_logging() -> logging.Handler:
+    """Console logging plus a memory buffer that becomes run_log.txt."""
+    fmt = logging.Formatter("%(levelname)s %(name)s: %(message)s")
+    console = logging.StreamHandler()
+    console.setFormatter(fmt)
+    buffer = logging.handlers.MemoryHandler(capacity=10_000, flushLevel=logging.CRITICAL)
+    buffer.setFormatter(fmt)
+    logging.basicConfig(level=logging.INFO, handlers=[console, buffer])
+    return buffer
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    buffer = setup_logging()
+
+    config = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
+    paths = config["paths"]
+    provider_name = args.provider or config.get("provider", "manual")
+    threshold = args.threshold if args.threshold is not None else float(config.get("threshold", 50))
+    top_n = args.top if args.top is not None else int(config.get("top_n", 20))
+    timeframe = config.get("timeframe", "now 7-d")
+
+    log.info("Run started %s | provider=%s threshold=%s top=%s timeframe=%s",
+             datetime.now().strftime("%Y-%m-%d %H:%M"), provider_name, threshold, top_n, timeframe)
+
+    try:
+        stocks = active_stocks(load_universe(paths["universe"]))
+    except UniverseError as exc:
+        log.error("%s", exc)
+        return 1
+    log.info("Universe: %d active stocks.", len(stocks))
+
+    provider = get_provider(provider_name, config)
+    if provider.name != provider_name:
+        log.warning("Provider fallback: requested %r, using %r.", provider_name, provider.name)
+
+    candidates, no_signal = score_universe(stocks, provider, timeframe=timeframe)
+
+    live_tickers, resolved, unmatched = resolve_live_adgroups(paths["live_adgroups"], stocks)
+    print("\nLive ad group matches (verify these are right):")
+    for r in resolved:
+        print(f"  {r.line!r:30} -> {r.ticker} (via {r.matched_on})")
+    if unmatched:
+        print("Live ad group lines that matched NOTHING in the universe:")
+        for line in unmatched:
+            print(f"  {line!r}")
+        log.warning("%d live ad group line(s) unmatched: %s", len(unmatched), ", ".join(unmatched))
+    print()
+
+    rows = []
+    selected_count = 0
+    for c in candidates:
+        already_live = c.ticker in live_tickers
+        selected = (not already_live) and c.score >= threshold and selected_count < top_n
+        if selected:
+            selected_count += 1
+        rows.append({
+            "ticker": c.ticker,
+            "name": c.name,
+            "score": c.score,
+            "delta_pct": c.delta_pct,
+            "already_live": already_live,
+            "selected": selected,
+        })
+
+    run_dir = Path(paths.get("output_dir", "output")) / f"run_{datetime.now():%Y-%m-%d_%H%M}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    candidates_path = run_dir / "candidates.csv"
+    pd.DataFrame(rows, columns=["ticker", "name", "score", "delta_pct",
+                                "already_live", "selected"]).to_csv(candidates_path, index=False)
+
+    log.info("Candidates: %d | already live: %d | selected: %d (threshold=%s, top=%s)",
+             len(rows), sum(r["already_live"] for r in rows), selected_count, threshold, top_n)
+    if no_signal:
+        log.info("Terms with no signal/failed: %d", len(no_signal))
+    log.info("Wrote %s", candidates_path)
+
+    run_log_lines = [
+        f"run: {datetime.now():%Y-%m-%d %H:%M}",
+        f"provider requested: {provider_name} | provider used: {provider.name}",
+        f"universe: {len(stocks)} active stocks",
+        f"candidates: {len(rows)} | selected: {selected_count} | threshold: {threshold} | top_n: {top_n}",
+        "",
+        "live ad group matches:",
+        *[f"  {r.line!r} -> {r.ticker} (via {r.matched_on})" for r in resolved],
+        "unmatched live ad group lines:",
+        *([f"  {line!r}" for line in unmatched] or ["  (none)"]),
+        "",
+        "terms with no signal / failed:",
+        *([f"  {t}" for t in no_signal] or ["  (none)"]),
+        "",
+        "log:",
+        *["  " + buffer.format(rec) for rec in buffer.buffer],
+    ]
+    (run_dir / "run_log.txt").write_text("\n".join(run_log_lines) + "\n", encoding="utf-8")
+
+    print(f"Done. Output in {run_dir}/")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
