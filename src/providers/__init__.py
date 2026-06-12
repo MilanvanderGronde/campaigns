@@ -16,6 +16,31 @@ log = logging.getLogger(__name__)
 PROVIDER_NAMES = ("manual", "pytrends", "google_api")
 
 
+class PytrendsWithFallback(TrendsProvider):
+    """Runs pytrends, but degrades to manual if it fails entirely —
+    raises, or returns no usable score for ANY term. `name` reflects the
+    provider that actually produced the scores (surfaced in the report)."""
+
+    name = "pytrends"
+
+    def __init__(self, primary: TrendsProvider, fallback: TrendsProvider):
+        self.primary = primary
+        self.fallback = fallback
+
+    def get_scores(self, terms: list[str], timeframe: str = "now 7-d") -> dict[str, TrendScore]:
+        try:
+            scores = self.primary.get_scores(terms, timeframe=timeframe)
+            if any(s.interest_now is not None for s in scores.values()):
+                return scores
+            log.warning("pytrends returned no usable score for any of %d terms — "
+                        "falling back to manual.", len(terms))
+        except Exception as exc:
+            log.warning("pytrends failed entirely (%s: %s) — falling back to manual.",
+                        type(exc).__name__, exc)
+        self.name = f"{self.fallback.name} (pytrends fallback)"
+        return self.fallback.get_scores(terms, timeframe=timeframe)
+
+
 def get_provider(name: str, config: dict[str, Any]) -> TrendsProvider:
     """Resolve a provider by name. pytrends falls back to manual on total failure."""
     paths = config.get("paths", {})
@@ -34,10 +59,11 @@ def get_provider(name: str, config: dict[str, Any]) -> TrendsProvider:
         try:
             from src.providers.pytrends_provider import PytrendsProvider
 
-            return PytrendsProvider(cache_dir=paths.get("cache_dir", "cache"))
+            primary = PytrendsProvider(cache_dir=paths.get("cache_dir", "cache"))
         except Exception as exc:
             log.warning("pytrends provider unavailable (%s) — falling back to manual.", exc)
             return _manual()
+        return PytrendsWithFallback(primary, _manual())
 
     if name == "google_api":
         from src.providers.google_api import GoogleTrendsApiProvider

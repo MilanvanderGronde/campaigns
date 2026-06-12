@@ -74,10 +74,10 @@ def main(argv: list[str] | None = None) -> int:
     log.info("Universe: %d active stocks.", len(stocks))
 
     provider = get_provider(provider_name, config)
-    if provider.name != provider_name:
-        log.warning("Provider fallback: requested %r, using %r.", provider_name, provider.name)
-
     candidates, no_signal = score_universe(stocks, provider, timeframe=timeframe)
+    # checked after scoring: pytrends can also fall back at runtime, mid-get_scores
+    if provider.name != provider_name:
+        log.warning("Provider fallback: requested %r, used %r.", provider_name, provider.name)
 
     live_tickers, resolved, unmatched = resolve_live_adgroups(paths["live_adgroups"], stocks)
     print("\nLive ad group matches (verify these are right):")
