@@ -6,6 +6,11 @@ brand: DEGIRO
 # pytrends silently falls back to manual if it fails entirely.
 provider: manual
 
+# Google Trends API (Alpha) — uncomment and fill in when access is granted.
+# This block is passed verbatim to GoogleTrendsApiProvider; see UPGRADING.md.
+# google_api:
+#   api_key: "..."             # or credentials_file: secrets/trends-sa.json (gitignored)
+
 # Trend timeframe passed to the provider.
 timeframe: "now 7-d"
 

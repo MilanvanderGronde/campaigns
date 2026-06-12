@@ -170,12 +170,20 @@ def test_persistent_failure_yields_none_not_raise():
 
 
 def test_factory_falls_back_to_manual_when_pytrends_missing():
-    _uninstall_fake_pytrends()
-    import yaml
-    config = yaml.safe_load(open("config.yaml", encoding="utf-8"))
-    from src.providers import get_provider
-    provider = get_provider("pytrends", config)
-    assert provider.name == "manual", f"expected manual fallback, got {provider.name}"
+    # Force ImportError even when the real pytrends happens to be installed:
+    # a None entry in sys.modules makes any import of it raise.
+    saved = {k: sys.modules.pop(k) for k in list(sys.modules)
+             if k == "pytrends" or k.startswith("pytrends.")}
+    sys.modules["pytrends"] = None
+    try:
+        import yaml
+        config = yaml.safe_load(open("config.yaml", encoding="utf-8"))
+        from src.providers import get_provider
+        provider = get_provider("pytrends", config)
+        assert provider.name == "manual", f"expected manual fallback, got {provider.name}"
+    finally:
+        sys.modules.pop("pytrends", None)
+        sys.modules.update(saved)
 
 
 def test_runtime_fallback_when_pytrends_returns_nothing():

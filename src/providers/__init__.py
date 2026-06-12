@@ -68,7 +68,7 @@ def get_provider(name: str, config: dict[str, Any]) -> TrendsProvider:
     if name == "google_api":
         from src.providers.google_api import GoogleTrendsApiProvider
 
-        return GoogleTrendsApiProvider()
+        return GoogleTrendsApiProvider(**(config.get("google_api") or {}))
 
     raise ValueError(f"Unknown provider {name!r}; expected one of {PROVIDER_NAMES}.")
 
